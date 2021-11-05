@@ -19,6 +19,13 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         await client.connect()
+        const database = client.db('doctors_portal');
+        const appointmentCollection = database.collection('appointments')
+
+        // post appointments
+        app.post('/appointments', async (req, res) => {
+
+        })
     }
     finally {
         //await client.close();
