@@ -21,6 +21,7 @@ async function run() {
         await client.connect()
         const database = client.db('doctors_portal');
         const appointmentCollection = database.collection('appointments')
+        const userCollection = database.collection('users')
 
         // post appointments
         app.post('/appointments', async (req, res) => {
@@ -37,6 +38,49 @@ async function run() {
             const cursor = appointmentCollection.find(query)
             const result = await cursor.toArray();
             console.log(result);
+            res.json(result);
+        })
+
+        // check admin or not
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
+
+
+        // post register users
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await userCollection.insertOne(user);
+            res.json(result);
+        })
+        // upsert google login users
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: user
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc, options);
+            res.json(result);
+        })
+        app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email }
+            const updatedDoc = {
+                $set: {
+                    role: 'admin',
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc);
             res.json(result);
         })
     }
